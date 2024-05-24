@@ -16,6 +16,8 @@ def get_stl_files(directory):
         for file in files:
             if file.endswith('.stl'):
                 stl_files.append(os.path.join(root, file))
+                if len(stl_files) == 5:
+                    return stl_files
     return stl_files
 
 def save_to_pickle(file_list, output_file):
@@ -34,7 +36,7 @@ def main():
     Main function to get .stl files from a directory and save to a pickle file.
     """
     input_directory = '/work/mech-ai-scratch/ajignasu/Objaverse/objaverse_xl/models_all_stl_thingiverse/batch_13'  # Change this to your directory
-    output_pkl = '/work/mech-ai-scratch/akmishra/Research_Work/Baskar_Group/Captiong_Pipeline_Cap3D/Captioning_pipeline_Cap3D/captioning_pipeline/Batch13/stl_files_batch13.pkl'  # Change this to your desired output pickle file path
+    output_pkl = '/work/mech-ai-scratch/akmishra/Research_Work/Baskar_Group/Captiong_Pipeline_Cap3D/Captioning_pipeline_Cap3D/captioning_pipeline/Batch13/stl_files_batch13_first5.pkl'  # Change this to your desired output pickle file path
 
     stl_files = get_stl_files(input_directory)
     save_to_pickle(stl_files, output_pkl)

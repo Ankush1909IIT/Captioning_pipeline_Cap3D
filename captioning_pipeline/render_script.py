@@ -262,6 +262,9 @@ for uid_path in uid_paths:
         bpy.ops.import_scene.gltf(filepath=uid_path)
     elif ext == '.obj':
         bpy.ops.import_scene.obj(filepath=uid_path)
+    elif ext == '.stl':
+        bpy.ops.import_scene.obj(filepath=uid_path)
+
 
     print('begin*************')
     mesh_objects = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
