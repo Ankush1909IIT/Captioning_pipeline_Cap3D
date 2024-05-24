@@ -15,4 +15,7 @@ text-to-3D/shap-e/shapE_inference/
 *.swp
 **/__pycache__/
 
-
+captioning_pipeline/example_material/Cap3D_captions_llava_next_1_caption
+captioning_pipeline/example_material/Cap3D_captions_llava_next_5_captions
+captioning_pipeline/example_material/Cap3D_captions_working_Run_BLIP2
+captioning_pipeline/example_material/Cap3D_imgs_first_run
