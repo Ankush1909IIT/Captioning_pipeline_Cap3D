@@ -6,7 +6,10 @@
 # ==============================================================================
 
 import os
-import openai
+#import openai
+from openai import OpenAI
+
+
 import pickle
 import torch
 import clip
@@ -23,7 +26,8 @@ parser.add_argument('--gpt_type', type = str, default='gpt4', choices=['gpt4', '
 args = parser.parse_args()
 
 # set up API key
-openai.api_key = args.openai_api_key
+client = OpenAI(api_key=args.openai_api_key)
+#openai.api_key = args.openai_api_key
 
 # set up CLIP
 cos = CosineSimilarity(dim=1, eps=1e-6)
@@ -34,39 +38,49 @@ model, preprocess = clip.load("ViT-B/32", device=device)
 def summarize_captions_gpt4(text):
     prompt = f"Given a set of descriptions about the same 3D object, distill these descriptions into one concise caption. The descriptions are as follows: '{text}'. Avoid describing background, surface, and posture. The caption should be:"
 
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
+    try:                           # Earlier it was openai.ChatCompletion.create(
+        # response = openai.Completion.create(
+        #     model="gpt-4",
+        #     messages=[{"role": "system", "content": prompt}],
+        #     top_p = 0.2,
+        # )
+        response = client.chat.completions.create(model="gpt-4",
             messages=[{"role": "system", "content": prompt}],
-            top_p = 0.2,
-        )
+            top_p = 0.2)
         if response.choices:
-            return response.choices[0].message['content']
+            #return response.choices[0].message['content']
+            return response.choices[0].message.content.strip()
         else:
             return "No response was received from gpt4 api."
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-    return response.choices[0].message['content']
+    #return response.choices[0].message['content']
+    return response.choices[0].message.content
 
 # set up GPT3.5
 def summarize_captions_gpt35(text):
     prompt = f"Given a set of descriptions about the same 3D object, distill these descriptions into one concise caption. The descriptions are as follows: '{text}'. Avoid describing background, surface, and posture. The caption should be:"
 
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+    try:                                       # Earlier it was openai.ChatCompletion.create(
+        # response = openai.Completion.create(
+        #     model="gpt-3.5-turbo",
+        #     messages=[{"role": "system", "content": prompt}],
+        #     top_p = 0.2,
+        # )
+        response = client.chat.completions.create(model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": prompt}],
-            top_p = 0.2,
-        )
+            top_p = 0.2)
         if response.choices:
-            return response.choices[0].message['content']
+            #return response.choices[0].message['content']
+            return response.choices[0].message.content
         else:
             return "No response was received from gpt4 api."
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-    return response.choices[0].message['content']
+    #return response.choices[0].message['content']
+    return response.choices[0].message.content
 
 
 # load captions for each view (8 views in total)
@@ -91,12 +105,16 @@ for i, cur_uid in enumerate(uids):
     # run 8 times to get 8 captions
     for k in range(8):
         image = preprocess(Image.open(os.path.join(args.parent_dir, 'Cap3D_imgs', 'Cap3D_imgs_view%d'%k, cur_uid + '_%d.png'%k))).unsqueeze(0).to(device)
+        print("preprocessing of image done")
         cur_caption = caps[k][cur_uid+'_%d'%k]
+
         text = clip.tokenize(cur_caption).to(device)
         with torch.no_grad():
             image_features = model.encode_image(image)
             text_features = model.encode_text(text)
+            print("Encoding Done")
         score = cos(image_features, text_features)
+        print(f"Score: {score}")
         if k == 8-1:
             cur_final_caption += cur_caption[torch.argmax(score)]
         else:
@@ -106,8 +124,11 @@ for i, cur_uid in enumerate(uids):
     while True:
         if args.gpt_type == 'gpt4':
             summary = summarize_captions_gpt4(cur_final_caption)
+            print(summary)
+            #print("GPT-4 Caption Generated")
         elif args.gpt_type == 'gpt3.5':
             summary = summarize_captions_gpt35(cur_final_caption)
+            print("GPT-3.5 Caption Generated")
         if 'An error occurred' not in summary:
             break
     
